@@ -2,11 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y ffmpeg git
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    git
 
 COPY requirements.txt .
 
 RUN pip install --upgrade pip
+
 RUN pip install -r requirements.txt
 
 COPY . .
