@@ -1,8 +1,12 @@
 import os
 import asyncio
+
 from pyrogram import Client, filters
+from pyrogram.types import Message
+
 from pytgcalls import PyTgCalls
-from pytgcalls.types import AudioPiped
+from pytgcalls.types.input_stream import AudioPiped
+
 from dotenv import load_dotenv
 import yt_dlp
 
@@ -21,7 +25,12 @@ bot = Client(
 
 call_py = PyTgCalls(bot)
 
+if not os.path.exists("downloads"):
+    os.makedirs("downloads")
+
 async def download_audio(query):
+
+    loop = asyncio.get_event_loop()
 
     def run():
 
@@ -32,6 +41,7 @@ async def download_audio(query):
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+
             info = ydl.extract_info(
                 f"ytsearch:{query}",
                 download=True
@@ -39,19 +49,17 @@ async def download_audio(query):
 
             return ydl.prepare_filename(info)
 
-    loop = asyncio.get_event_loop()
-
     return await loop.run_in_executor(None, run)
 
 @bot.on_message(filters.command("start"))
-async def start(_, message):
+async def start_handler(_, message: Message):
 
     await message.reply_text(
         "Music Bot Started"
     )
 
 @bot.on_message(filters.command("play"))
-async def play(_, message):
+async def play_handler(_, message: Message):
 
     if len(message.command) < 2:
         return await message.reply_text(
@@ -64,26 +72,31 @@ async def play(_, message):
         "Downloading..."
     )
 
-    path = await download_audio(query)
+    try:
 
-    await call_py.join_group_call(
-        message.chat.id,
-        AudioPiped(path)
-    )
+        file_path = await download_audio(query)
 
-    await msg.edit_text(
-        "Streaming Started"
-    )
+        await call_py.join_group_call(
+            message.chat.id,
+            AudioPiped(file_path)
+        )
+
+        await msg.edit_text(
+            "Streaming Started"
+        )
+
+    except Exception as e:
+
+        await msg.edit_text(
+            str(e)
+        )
 
 async def main():
-
-    if not os.path.exists("downloads"):
-        os.makedirs("downloads")
 
     await bot.start()
     await call_py.start()
 
-    print("Bot Started")
+    print("Bot Started Successfully")
 
     await asyncio.Event().wait()
 
