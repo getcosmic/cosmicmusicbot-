@@ -1,0 +1,10 @@
+pyrogram
+pytgcalls
+yt-dlp
+python-dotenv
+aiohttp
+motor
+redis
+Pillow
+tgcrypto
+uvloop
